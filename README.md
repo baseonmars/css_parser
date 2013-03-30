@@ -14,7 +14,7 @@ Licence
 It's always a good idea to licence your code, even if you don't think someone would want
 to use it. 
 
-Copyright (c) 2012, Dan Etherington
+Copyright (c) 2013, Dan Etherington
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
