@@ -33,7 +33,7 @@ case class Unicode(value: String) extends CSSValue
 
 case class BadString(value: String)
 
-case class Declaration(property: String, value: CSSValue)
+case class Declaration(property: String, value: String)
 
 case class RuleSet(selector: Selector, declarations: List[Declaration])
 
@@ -67,7 +67,6 @@ object CSSParser extends RegexParsers {
   val string1 = s"""(\"([^\n\r\f\"]|\\$nl|$escape)*\")"""
   val string2	= s"\'([^\\n\\r\\f\\']|\\$nl|$escape)*\'"
   val string =  s"$string1|$string2"
-  // TODO: fix this horrible formatting
   val uri = s"url\\(${w}${string}${w}\\)|url\\(${w}([!#"+"$"+s"%&*-\\[\\]-~]|${nonascii}|${escape})*${w}\\)"
   val hash = s"#${name}"
   val includes = "~="
@@ -107,36 +106,32 @@ object CSSParser extends RegexParsers {
 
   def FUNCTION:Parser[Function] = IDENT ~ "(" ~ repsep(any, ",") ~ ')' ^^ { case i ~ _ ~ _ ~ _=> Function(i) }
 
-  def COLON: Parser[String] = ":"
+  def colon: Parser[String] = ":"
 
-  def DELIM: Parser[String] = ";"
+  def delim: Parser[String] = ";"
 
   def any = URI | UNICODE_RANGE | PERCENTAGE | DIMENSION |
-    NUMBER | STRING | HASH | INCLUDES | IDENT | DASHMATCH | COLON | DELIM
+    NUMBER | STRING | HASH | INCLUDES | IDENT | DASHMATCH | colon | delim
 
   def selector: Parser[String] = """(?i)[.\w]+""".r
 
   def property = s"(?i)$ident".r
 
-  def value = any    // TODO this should be any+
-
-
-
-
+  def value = s"(?i)($ident|$num)+".r    // TODO this should be any+
 
   /*
   [ IDENT | NUMBER | PERCENTAGE | DIMENSION | STRING
-  | DELIM | URI | HASH | UNICODE-RANGE | INCLUDES
+  | delim | URI | HASH | UNICODE-RANGE | INCLUDES
   | DASHMATCH | ':' | FUNCTION S* [any|unused]* ')'
   | '(' S* [any|unused]* ')' | '[' S* [any|unused]* ']'
   ] S*;
   */
-   import implicits._
-  def declaration: Parser[Declaration] = property ~ COLON ~ value ^^ {
+
+  def declaration: Parser[Declaration] = property ~ colon ~ value ^^ {
     case p ~ ":" ~ v => Declaration(p, v)
   }
 
-  def ruleset: Parser[RuleSet] = selector ~ "{" ~ rep1sep(declaration, DELIM) ~ (DELIM ?) ~ "}" ^^ {
+  def ruleset: Parser[RuleSet] = selector ~ "{" ~ rep1sep(declaration, delim) ~ (delim ?) ~ "}" ^^ {
     case selector ~ "{" ~ declarations ~ _ ~ "}" => RuleSet(Selector(selector), declarations)
   }
 
